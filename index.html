@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>AI 응급실 대기시간 예측 서비스</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f5f7fa}
+header{background:#0077cc;color:white;padding:20px;text-align:center}
+section{background:white;margin:20px;padding:20px;border-radius:10px;box-shadow:0 0 5px rgba(0,0,0,0.1)}
+button{padding:10px 15px;margin:5px;cursor:pointer}
+input,select{padding:10px;margin:5px}
+.hospital{border:1px solid #ccc;padding:15px;margin-top:10px;border-radius:8px}
+</style>
+</head>
+<body>
+<header><h1>🚑 AI 응급실 대기시간 예측 서비스</h1></header>
+
+<section>
+    <h2>병원 검색</h2>
+    <input type="text" id="searchInput" placeholder="병원 이름 입력">
+    <button onclick="searchHospital()">검색</button>
+    <div id="searchResult"></div>
+</section>
+
+<section>
+<h2>AI 대기시간 예측</h2>
+환자 수 <input type="number" id="patients" value="20">
+<button onclick="predictWait()">예측하기</button>
+<p id="prediction"></p>
+</section>
+
+<section>
+<h2>주변 응급실</h2>
+<div id="hospitalList"></div>
+</section>
+
+<section>
+<h2>응급상황 퀴즈 (<span id="qNum">1</span>/5)</h2>
+<p id="quizQuestion"></p>
+<div id="quizOptions"></div>
+<p id="quizResult"></p>
+<button id="nextBtn" style="display:none;" onclick="nextQuestion()">다음 문제</button>
+</section>
+
+<script>
+const hospitals=[
+    {name:"서울대학교병원",distance:2.1,crowded:"보통",patients:35},
+    {name:"삼성서울병원",distance:3.5,crowded:"낮음",patients:10},
+    {name:"서울아산병원",distance:5.0,crowded:"높음",patients:60}
+];
+
+// 퀴즈 데이터
+const quizData = [
+    {q: "심한 흉통이 발생하면?", a: "응급실 방문", options: ["응급실 방문", "집에서 휴식", "약국 방문"]},
+    {q: "화상을 입었을 때 가장 먼저 할 일은?", a: "찬물로 식히기", options: ["연고 바르기", "찬물로 식히기", "바로 병원가기"]},
+    {q: "발목을 삐었을 때 권장되는 응급처치는?", a: "냉찜질", options: ["온찜질", "냉찜질", "마사지"]},
+    {q: "의식을 잃은 사람 발견 시 가장 먼저 할 일은?", a: "119 신고", options: ["물 먹이기", "흔들어 깨우기", "119 신고"]},
+    {q: "코피가 날 때 올바른 자세는?", a: "고개를 앞으로 숙임", options: ["고개를 뒤로 젖힘", "고개를 앞으로 숙임", "누워 있기"]}
+];
+
+let currentQ = 0;
+
+function renderHospitals(list = hospitals) {
+    let html = "";
+    list.forEach(h => {
+        let wait = Math.round(h.patients * 0.8);
+        html += `<div class="hospital"><h3>${h.name}</h3><p>거리: ${h.distance}km / 예상 대기: ${wait}분</p></div>`;
+    });
+    document.getElementById("hospitalList").innerHTML = html;
+}
+
+function searchHospital() {
+    let query = document.getElementById("searchInput").value;
+    let result = hospitals.filter(h => h.name.includes(query));
+    document.getElementById("searchResult").innerHTML = result.length > 0 ? 
+        `결과: ${result[0].name}` : "검색 결과 없음";
+}
+
+function predictWait() {
+    let patients = Number(document.getElementById("patients").value);
+    document.getElementById("prediction").innerHTML = "예상 대기시간: " + Math.round(patients * 0.8) + "분";
+}
+
+function loadQuiz() {
+    let data = quizData[currentQ];
+    document.getElementById("qNum").innerText = currentQ + 1;
+    document.getElementById("quizQuestion").innerText = data.q;
+    let opts = "";
+    data.options.forEach(o => opts += `<button onclick="checkQuiz('${o}')">${o}</button>`);
+    document.getElementById("quizOptions").innerHTML = opts;
+    document.getElementById("quizResult").innerHTML = "";
+    document.getElementById("nextBtn").style.display = "none";
+}
+
+function checkQuiz(ans) {
+    document.getElementById("quizResult").innerText = ans === quizData[currentQ].a ? "정답!" : "오답.";
+    document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+function nextQuestion() {
+    currentQ = (currentQ + 1) % 5;
+    loadQuiz();
+}
+
+renderHospitals();
+loadQuiz();
+</script>
+</body>
+</html>
